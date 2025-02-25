@@ -8,6 +8,8 @@ class ProximityManager: NSObject, ObservableObject, NISessionDelegate, MCSession
     @Published var isTracking: Bool = false
     @Published var distanceToAirtag: Double? = nil
     @Published var distanceToHomepod: Double? = nil
+    @Published var airtagDirection: SIMD3<Float>? = nil
+    @Published var homepodDirection: SIMD3<Float>? = nil
 
     private var session: NISession?
     private var peerSession: MCSession?
@@ -63,12 +65,14 @@ class ProximityManager: NSObject, ObservableObject, NISessionDelegate, MCSession
             
             if object.discoveryToken == airtagToken {
                 distanceToAirtag = Double(distance)
+                airtagDirection = object.direction
                 print("Distance to AirTag: \(distance) meters")
                 if distance < 1.0 {
                     AudioManager.shared.switchToIphone()
                 }
             } else if object.discoveryToken == homepodToken {
                 distanceToHomepod = Double(distance)
+                homepodDirection = object.direction
                 print("Distance to HomePod: \(distance) meters")
                 if distance < 1.0 {
                     AudioManager.shared.switchToHomePod()
@@ -133,4 +137,3 @@ class ProximityManager: NSObject, ObservableObject, NISessionDelegate, MCSession
         browserViewController.dismiss(animated: true)
     }
 }
-
