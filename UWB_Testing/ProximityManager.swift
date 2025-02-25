@@ -50,13 +50,19 @@ class ProximityManager: NSObject, ObservableObject, NISessionDelegate, MCSession
     }
 
     private func sendDiscoveryToken(token: NIDiscoveryToken) {
+        guard let peers = peerSession?.connectedPeers, !peers.isEmpty else {
+            print("No connected peers to send token to.")
+            return
+        }
+
         do {
             let tokenData = try NSKeyedArchiver.archivedData(withRootObject: token, requiringSecureCoding: true)
-            try peerSession?.send(tokenData, toPeers: peerSession!.connectedPeers, with: .reliable)
+            try peerSession?.send(tokenData, toPeers: peers, with: .reliable)
         } catch {
             print("Failed to send token: \(error)")
         }
     }
+
 
     // MARK: - NISessionDelegate
     func session(_ session: NISession, didUpdate nearbyObjects: [NINearbyObject]) {
@@ -98,13 +104,13 @@ class ProximityManager: NSObject, ObservableObject, NISessionDelegate, MCSession
     func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
         switch state {
         case .connected:
-            print("Connected to \(peerID.displayName)")
+            print("✅ Connected to peer: \(peerID.displayName)")
         case .notConnected:
-            print("Disconnected from \(peerID.displayName)")
+            print("❌ Disconnected from peer: \(peerID.displayName)")
         case .connecting:
-            print("Connecting to \(peerID.displayName)")
+            print("🔄 Connecting to peer: \(peerID.displayName)")
         @unknown default:
-            break
+            print("❓ Unknown connection state")
         }
     }
 

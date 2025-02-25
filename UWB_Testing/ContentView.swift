@@ -45,6 +45,13 @@ struct ContentView: View {
             .padding()
         }
         .padding()
+        .onAppear {
+        // Request permissions when the view appears
+            PermissionsManager.shared.requestLocalNetworkPermission()
+            PermissionsManager.shared.requestBluetoothPermission()
+            PermissionsManager.shared.requestNearbyInteractionPermission()
+            PermissionsManager.shared.requestLocationPermission()
+        }
     }
 }
 
