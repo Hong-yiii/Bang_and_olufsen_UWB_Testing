@@ -1,10 +1,8 @@
-// PermissionsManager.swift
 import Foundation
 import CoreBluetooth
 import NearbyInteraction
 import Network
 import CoreLocation
-
 
 class PermissionsManager: NSObject, CLLocationManagerDelegate, ObservableObject {
     static let shared = PermissionsManager()
@@ -19,24 +17,25 @@ class PermissionsManager: NSObject, CLLocationManagerDelegate, ObservableObject 
     }
     
     func requestPermissions() {
-        requestLocalNetworkPermission()
-        requestNearbyInteractionPermission()
-        requestBluetoothPermission()
         requestLocationPermission()
+        requestBluetoothPermission()
+        requestNearbyInteractionPermission()
+        requestLocalNetworkPermission()
     }
     
     func requestLocalNetworkPermission() {
         let browser = NWBrowser(for: .bonjour(type: "_uwbtracking._tcp", domain: nil), using: .udp)
         browser.start(queue: .main)
+        Logger.log("Local network permission requested.")
     }
     
     func requestNearbyInteractionPermission() {
         let session = NISession()
-        session.invalidate()
+        Logger.log("Nearby Interaction session created for permission request.")
     }
     
     func requestBluetoothPermission() {
-        _ = CBCentralManager(delegate: self, queue: nil)
+        bluetoothManager = CBCentralManager(delegate: self, queue: nil)
     }
     
     func requestLocationPermission() {

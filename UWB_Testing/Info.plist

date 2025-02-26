@@ -62,11 +62,20 @@
     </array>
 
     <!-- Required Permission for UWB Nearby Interaction -->
+
     <key>NSNearbyInteractionUsageDescription</key>
     <string>This app uses Ultra-Wideband (UWB) to detect and track nearby AirTags.</string>
+
     <key>NSLocationWhenInUseUsageDescription</key>
     <string>This app requires access to location services to enhance Ultra-Wideband (UWB) tracking accuracy.</string>
 
+    <key>NSLocalNetworkUsageDescription</key>
+    <string>This app needs access to your local network for discovering nearby devices.</string>
+
+    <key>NSBonjourServices</key>
+    <array>
+        <string>_uwbtracking._tcp</string>
+    </array>
 
 </dict>
 </plist>
