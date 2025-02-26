@@ -62,21 +62,27 @@
     </array>
 
     <!-- Required Permission for UWB Nearby Interaction -->
-
     <key>NSNearbyInteractionUsageDescription</key>
-    <string>This app uses Ultra-Wideband (UWB) to detect and track nearby AirTags.</string>
-
+    <string>This app uses Nearby Interaction for UWB or short-range detection.</string>
+    
+    <!-- Location (if used to improve UWB accuracy) -->
     <key>NSLocationWhenInUseUsageDescription</key>
-    <string>This app requires access to location services to enhance Ultra-Wideband (UWB) tracking accuracy.</string>
-
+    <string>Needed for improved UWB location accuracy.</string>
+    
+    <!-- Local Network (Bonjour) -->
     <key>NSLocalNetworkUsageDescription</key>
-    <string>This app needs access to your local network for discovering nearby devices.</string>
-
+    <string>This app needs local network access to discover and connect to nearby devices.</string>
+    
+    <!-- Declare the Bonjour service type your app uses -->
     <key>NSBonjourServices</key>
     <array>
-        <string>_uwbtracking._tcp</string>
+      <string>_my-uwb-service._tcp</string>
     </array>
-
+    
+    <!-- Bluetooth (for peer-to-peer discovery) -->
+    <key>NSBluetoothAlwaysUsageDescription</key>
+    <string>Used to discover other iPhones via Bluetooth-based peer-to-peer.</string>
+    
 </dict>
 </plist>
 
