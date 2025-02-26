@@ -61,24 +61,12 @@
         <string>UIInterfaceOrientationLandscapeRight</string>
     </array>
 
-    <!-- Added Permissions for Bluetooth, Location, UWB, and Local Network -->
-
-    <key>NSBluetoothAlwaysUsageDescription</key>
-    <string>This app uses Bluetooth to connect to nearby devices for proximity detection.</string>
-
-    <key>NSLocationWhenInUseUsageDescription</key>
-    <string>This app uses your location to improve the accuracy of detecting nearby devices.</string>
-
+    <!-- Required Permission for UWB Nearby Interaction -->
     <key>NSNearbyInteractionUsageDescription</key>
-    <string>This app uses Ultra-Wideband (UWB) to detect proximity and switch audio between devices.</string>
+    <string>This app uses Ultra-Wideband (UWB) to detect and track nearby AirTags.</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>This app requires access to location services to enhance Ultra-Wideband (UWB) tracking accuracy.</string>
 
-    <key>NSLocalNetworkUsageDescription</key>
-    <string>This app needs access to your local network to discover and connect to nearby devices.</string>
-
-    <key>NSBonjourServices</key>
-    <array>
-        <string>_uwbtracking._tcp</string>
-    </array>
 
 </dict>
 </plist>

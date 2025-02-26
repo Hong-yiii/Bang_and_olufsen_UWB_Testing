@@ -1,15 +1,10 @@
-//
-//  PermissionsManager.swift
-//  UWB_Testing
-//
-//  Created by Hong Yi Lin on 25/2/25.
-//
-
+// PermissionsManager.swift
 import Foundation
 import CoreBluetooth
 import NearbyInteraction
 import Network
 import CoreLocation
+
 
 class PermissionsManager: NSObject, CLLocationManagerDelegate, ObservableObject {
     static let shared = PermissionsManager()
@@ -23,37 +18,37 @@ class PermissionsManager: NSObject, CLLocationManagerDelegate, ObservableObject 
         locationManager.delegate = self
     }
     
-    // Request Local Network Access (iOS handles the prompt automatically)
+    func requestPermissions() {
+        requestLocalNetworkPermission()
+        requestNearbyInteractionPermission()
+        requestBluetoothPermission()
+        requestLocationPermission()
+    }
+    
     func requestLocalNetworkPermission() {
         let browser = NWBrowser(for: .bonjour(type: "_uwbtracking._tcp", domain: nil), using: .udp)
-        browser.start(queue: .main) // This will trigger the local network prompt
+        browser.start(queue: .main)
     }
     
-    // Request Nearby Interaction (UWB) permission
     func requestNearbyInteractionPermission() {
-        // Just initializing the NISession triggers the permission prompt
         let session = NISession()
-        session.invalidate() // We don’t need the session, just the prompt
+        session.invalidate()
     }
     
-    // Request Bluetooth permission
     func requestBluetoothPermission() {
-        // The CBCentralManager initialization will automatically request Bluetooth permission
         _ = CBCentralManager(delegate: self, queue: nil)
     }
     
-    // Request Location permission
     func requestLocationPermission() {
         locationManager.requestWhenInUseAuthorization()
     }
     
-    // MARK: - CLLocationManagerDelegate
     func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
         switch status {
         case .authorizedWhenInUse, .authorizedAlways:
-            print("Location permission granted")
+            Logger.log("Location permission granted")
         default:
-            print("Location permission denied")
+            Logger.log("Location permission denied")
         }
     }
 }
@@ -62,9 +57,9 @@ extension PermissionsManager: CBCentralManagerDelegate {
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         switch central.state {
         case .poweredOn:
-            print("Bluetooth is ON")
+            Logger.log("Bluetooth is ON")
         default:
-            print("Bluetooth permission not granted or unavailable")
+            Logger.log("Bluetooth permission not granted or unavailable")
         }
     }
 }
