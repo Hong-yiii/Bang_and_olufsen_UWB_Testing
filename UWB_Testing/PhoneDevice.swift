@@ -21,8 +21,8 @@ class PhoneDevice: Identifiable, ObservableObject {
     /// A color assigned randomly so we can differentiate each phone in the UI.
     let color: Color
     
-    /// The phone’s unique discovery token (received via Multipeer).
-    let discoveryToken: NIDiscoveryToken
+    /// The phone's unique discovery token (received via Multipeer).
+    private(set) var discoveryToken: NIDiscoveryToken
     
     /// The latest measured distance in meters (updated by NISession).
     @Published var distance: Float?
@@ -38,5 +38,13 @@ class PhoneDevice: Identifiable, ObservableObject {
             saturation: 0.8,
             brightness: 0.8
         )
+        
+        // Log the token to verify it's valid
+        Logger.log("📝 Created PhoneDevice with token: \(token)")
+    }
+    
+    func updateToken(_ newToken: NIDiscoveryToken) {
+        self.discoveryToken = newToken
+        Logger.log("📝 Updated token for \(displayName)")
     }
 }
