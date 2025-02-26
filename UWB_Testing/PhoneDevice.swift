@@ -1,24 +1,33 @@
-// A Object to represent and store information representing another phone
+//
+//  PhoneDevice.swift
+//  MyMultiPhoneApp
+//
+//  Represents a remote phone participating in UWB ranging.
+//
 
 import Foundation
 import NearbyInteraction
-import SwiftUI  // for Color, if you want random color assignment
+import SwiftUI
 import simd
 
+/// A model representing another phone in our peer group,
+/// along with its NI distance/direction data.
 class PhoneDevice: Identifiable, ObservableObject {
     let id = UUID()
     
-    // A user-friendly name for the remote device
+    /// The display name for the remote device (taken from MCPeerID).
     let displayName: String
     
-    // A random color so we can visually differentiate
+    /// A color assigned randomly so we can differentiate each phone in the UI.
     let color: Color
     
-    // This is the remote phone’s NIDiscoveryToken (obtained via MC).
+    /// The phone’s unique discovery token (received via Multipeer).
     let discoveryToken: NIDiscoveryToken
     
-    // Updated when the session receives new data
+    /// The latest measured distance in meters (updated by NISession).
     @Published var distance: Float?
+    
+    /// The latest measured direction (x, y, z) from us to the remote phone.
     @Published var direction: simd_float3?
     
     init(displayName: String, token: NIDiscoveryToken) {
