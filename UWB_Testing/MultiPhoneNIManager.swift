@@ -72,20 +72,22 @@ class MultiPhoneNIManager: NSObject, ObservableObject {
     }
     
     private func setupNISession() {
-        // Don't proceed if NI isn't supported
-        guard NISession.isSupported else {
-            Logger.log("ERROR: Nearby Interaction not supported on this device")
+        // Check device capabilities instead of `isSupported`
+        guard NISession.deviceCapabilities.supportsDirectionMeasurement ||
+              NISession.deviceCapabilities.supportsPreciseDistanceMeasurement else {
+            Logger.log("❌ ERROR: Nearby Interaction not supported on this device")
             statusMessage = "UWB not supported on this device"
             return
         }
-        
+
         // Clean up any existing session
         niSession?.invalidate()
-        
+
         // Create a new session
         niSession = NISession()
         niSession?.delegate = self
-        Logger.log("Local NISession initialized")
+
+        Logger.log("✅ Local NISession initialized")
     }
     
     // MARK: - Token Exchange
