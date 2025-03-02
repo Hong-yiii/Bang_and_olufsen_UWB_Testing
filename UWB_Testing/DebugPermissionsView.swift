@@ -8,13 +8,14 @@
 import SwiftUI
 import CoreBluetooth
 import CoreLocation
+import NearbyInteraction
 
 struct DebugPermissionsView: View {
     @ObservedObject var perms = PermissionsManager.shared
     
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Nearby Interaction Supported: \(perms.isNearbyInteractionSupported ? "Yes" : "No")")
+            Text("Nearby Interaction Supported: \(NISession.deviceCapabilities.supportsDirectionMeasurement ? "Yes" : "No")")
             
             Text("Location Auth Status: \(stringForLocationStatus(perms.locationAuthStatus))")
             
