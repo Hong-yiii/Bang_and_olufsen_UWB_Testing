@@ -25,10 +25,17 @@ class PhoneDevice: Identifiable, ObservableObject {
     private(set) var discoveryToken: NIDiscoveryToken
     
     /// The latest measured distance in meters (updated by NISession).
-    @Published var distance: Float?
-    
+    @Published var distance: Float? {
+        didSet {
+            Logger.log("Updated Distance: \(distance ?? -1) m", from: "PhoneDevice")
+        }
+    }
     /// The latest measured direction (x, y, z) from us to the remote phone.
-    @Published var direction: simd_float3?
+    @Published var direction: simd_float3? {
+        didSet {
+            Logger.log("Updated direction: \(direction?.x ?? 0), \(direction?.y ?? 0), \(direction?.z ?? 0)", from: "PhoneDevice")
+        }
+    }
     
     init(displayName: String, token: NIDiscoveryToken) {
         self.displayName = displayName
@@ -40,11 +47,11 @@ class PhoneDevice: Identifiable, ObservableObject {
         )
         
         // Log the token to verify it's valid
-        Logger.log("📝 Created PhoneDevice with token: \(token)")
+        Logger.log("📝 Created PhoneDevice with token: \(token)", from: "PhoneDevice")
     }
     
     func updateToken(_ newToken: NIDiscoveryToken) {
         self.discoveryToken = newToken
-        Logger.log("📝 Updated token for \(displayName)")
+        Logger.log("📝 Updated token for \(displayName)", from: "PhoneDevice")
     }
 }

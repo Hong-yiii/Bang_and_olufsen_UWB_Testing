@@ -23,7 +23,7 @@ class PermissionsManager: NSObject, ObservableObject {
     /// Current Bluetooth state (e.g. poweredOn, unauthorized, etc.)
     @Published var bluetoothState: CBManagerState = .unknown
     /// Whether this device supports Nearby Interaction (UWB)
-    @Published var isNearbyInteractionSupported: Bool = NISession.isSupported
+    @Published var isNearbyInteractionSupported: Bool = false
     /// Whether local network permission is granted (detected via NWBrowser states)
     @Published var localNetworkPermissionGranted: Bool = false
     
@@ -45,7 +45,7 @@ class PermissionsManager: NSObject, ObservableObject {
         
         // Create an NISession to trigger the NI permission prompt if needed
         niSession = NISession()
-        isNearbyInteractionSupported = NISession.isSupported
+        isNearbyInteractionSupported = NISession.deviceCapabilities.supportsDirectionMeasurement
     }
     
     // MARK: - Public: Request All
@@ -64,7 +64,6 @@ class PermissionsManager: NSObject, ObservableObject {
             self.onPermissionsResolved?(true)
         }
     }
-    
     // MARK: - Individual Permission Requests
     private func requestLocationPermission() {
         locationManager.requestWhenInUseAuthorization()
@@ -77,7 +76,7 @@ class PermissionsManager: NSObject, ObservableObject {
     
     private func requestNearbyInteractionPermission() {
         // Already created niSession in init(). That triggers NI usage prompt if needed.
-        Logger.log("Nearby Interaction session created for permission request.")
+        Logger.log("Nearby Interaction session created for permission request.", from: "PermissionsManager")
     }
     
     /// Uses NWBrowser to request local network permission
@@ -101,7 +100,7 @@ class PermissionsManager: NSObject, ObservableObject {
         }
         
         localNetworkBrowser?.start(queue: .main)
-        Logger.log("Local network permission requested.")
+        Logger.log("Local network permission requested.", from: "PermissionsManager")
     }
 }
 
@@ -113,9 +112,9 @@ extension PermissionsManager: CLLocationManagerDelegate {
         
         switch status {
         case .authorizedWhenInUse, .authorizedAlways:
-            Logger.log("Location permission granted.")
+            Logger.log("Location permission granted.", from: "PermissionsManager")
         default:
-            Logger.log("Location permission denied or not determined.")
+            Logger.log("Location permission denied or not determined.", from: "PermissionsManager")
         }
     }
 }
@@ -128,9 +127,9 @@ extension PermissionsManager: CBCentralManagerDelegate {
         
         switch central.state {
         case .poweredOn:
-            Logger.log("Bluetooth is ON.")
+            Logger.log("Bluetooth is ON.", from: "PermissionsManager")
         default:
-            Logger.log("Bluetooth permission not granted or unavailable.")
+            Logger.log("Bluetooth permission not granted or unavailable.", from: "PermissionsManager")
         }
     }
 }
