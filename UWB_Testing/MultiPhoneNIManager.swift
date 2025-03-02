@@ -11,7 +11,7 @@ import MultipeerConnectivity
 import SwiftUI
 
 class MultiPhoneNIManager: NSObject, ObservableObject {
-    
+    static let shared = MultiPhoneNIManager() // ✅ Singleton instance
     // MARK: - Published Properties
     
     /// The remote phone we're connected to (only track one device for simplicity)
@@ -19,6 +19,9 @@ class MultiPhoneNIManager: NSObject, ObservableObject {
     
     /// A simple status message for the UI
     @Published var statusMessage: String = "Ready"
+    
+    // Publishing the whole logs
+    @Published var logs: [String] = []
     
     // MARK: - MC Properties
     private let serviceType = "my-uwb-service"
@@ -75,7 +78,7 @@ class MultiPhoneNIManager: NSObject, ObservableObject {
         // Check device capabilities instead of `isSupported`
         guard NISession.deviceCapabilities.supportsDirectionMeasurement ||
               NISession.deviceCapabilities.supportsPreciseDistanceMeasurement else {
-            Logger.log("❌ ERROR: Nearby Interaction not supported on this device")
+            Logger.log("❌ ERROR: Direction Measurement or Precise Distance Measurement is not supported on this device")
             statusMessage = "UWB not supported on this device"
             return
         }
@@ -159,7 +162,7 @@ class MultiPhoneNIManager: NSObject, ObservableObject {
 
 // MARK: - MCSessionDelegate
 extension MultiPhoneNIManager: MCSessionDelegate {
-    func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
+    func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) { //logs the different connection states in MultipeerConnectivity, this is called whenever here is a change in connection state
         DispatchQueue.main.async {
             switch state {
             case .connected:
@@ -188,7 +191,7 @@ extension MultiPhoneNIManager: MCSessionDelegate {
         }
     }
     
-    func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
+    func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) { // this is called by didReceive data, creates newPhoneDevice object if there is a valid token
         Logger.log("📥 Received data (\(data.count) bytes) from \(peerID.displayName)")
         
         do {
@@ -228,7 +231,7 @@ extension MultiPhoneNIManager: MCSessionDelegate {
         }
     }
     
-    // Required stubs
+    // Required stubs (Not in use but are required by MCSessionDelegate)
     func session(_ session: MCSession, didReceive stream: InputStream, withName streamName: String, fromPeer peerID: MCPeerID) {}
     func session(_ session: MCSession, didStartReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, with progress: Progress) {}
     func session(_ session: MCSession, didFinishReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, at localURL: URL?, withError error: Error?) {}

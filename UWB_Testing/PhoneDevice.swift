@@ -25,10 +25,17 @@ class PhoneDevice: Identifiable, ObservableObject {
     private(set) var discoveryToken: NIDiscoveryToken
     
     /// The latest measured distance in meters (updated by NISession).
-    @Published var distance: Float?
-    
+    @Published var distance: Float? {
+        didSet {
+            Logger.log("Updated Distance: \(distance ?? -1) m")
+        }
+    }
     /// The latest measured direction (x, y, z) from us to the remote phone.
-    @Published var direction: simd_float3?
+    @Published var direction: simd_float3? {
+        didSet {
+            Logger.log("Updated direction: \(direction?.x ?? 0), \(direction?.y ?? 0), \(direction?.z ?? 0)")
+        }
+    }
     
     init(displayName: String, token: NIDiscoveryToken) {
         self.displayName = displayName
