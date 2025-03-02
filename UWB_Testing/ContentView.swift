@@ -162,8 +162,10 @@ struct LogsView: View {
                     .font(.headline)
                     .padding(.top, 5)
 
-                // For each log in that origin group
-                ForEach(grouped[origin]!) { logEntry in
+                // Display only the last 5 logs for each origin category
+                let logs = grouped[origin]?.suffix(5) ?? []
+
+                ForEach(logs, id: \.id) { logEntry in
                     Text(logEntry.message)
                         .font(.caption)
                         .padding(5)
@@ -175,6 +177,7 @@ struct LogsView: View {
         }
     }
 }
+
 
 
 /// A simple triangle shape representing an arrow
