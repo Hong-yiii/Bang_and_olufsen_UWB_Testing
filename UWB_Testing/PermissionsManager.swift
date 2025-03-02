@@ -23,7 +23,7 @@ class PermissionsManager: NSObject, ObservableObject {
     /// Current Bluetooth state (e.g. poweredOn, unauthorized, etc.)
     @Published var bluetoothState: CBManagerState = .unknown
     /// Whether this device supports Nearby Interaction (UWB)
-    @Published var isNearbyInteractionSupported: Bool = NISession.isSupported
+    @Published var isNearbyInteractionSupported: Bool = NISession.deviceCapabilities.supportsDirectionMeasurement
     /// Whether local network permission is granted (detected via NWBrowser states)
     @Published var localNetworkPermissionGranted: Bool = false
     
@@ -45,7 +45,7 @@ class PermissionsManager: NSObject, ObservableObject {
         
         // Create an NISession to trigger the NI permission prompt if needed
         niSession = NISession()
-        isNearbyInteractionSupported = NISession.isSupported
+        isNearbyInteractionSupported = NISession.deviceCapabilities.supportsDirectionMeasurement
     }
     
     // MARK: - Public: Request All
