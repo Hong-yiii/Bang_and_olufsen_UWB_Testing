@@ -12,7 +12,7 @@ class MQTTPublisher: NSObject, ObservableObject {
         self.phoneManager = phoneManager
         let clientID = "ios_client_\(UUID().uuidString.prefix(6))"
         
-        self.mqttClient = CocoaMQTT(clientID: clientID, host: "BigBrain.localhost", port: 1883)
+        self.mqttClient = CocoaMQTT(clientID: clientID, host: "BigBrain.local", port: 1883)
         self.mqttClient.username = nil // need if auth is enabled
         self.mqttClient.password = nil
         self.mqttClient.keepAlive = 120
