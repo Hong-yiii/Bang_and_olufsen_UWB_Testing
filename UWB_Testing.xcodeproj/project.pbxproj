@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		EF79400E2D78B001008B0976 /* CocoaMQTT in Frameworks */ = {isa = PBXBuildFile; productRef = EF79400D2D78B001008B0976 /* CocoaMQTT */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		EF1AA2662D69BD7A00F455B5 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -52,6 +56,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EF79400E2D78B001008B0976 /* CocoaMQTT in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,6 +117,7 @@
 			);
 			name = UWB_Testing;
 			packageProductDependencies = (
+				EF79400D2D78B001008B0976 /* CocoaMQTT */,
 			);
 			productName = UWB_Testing;
 			productReference = EF1AA2552D69BD7900F455B5 /* UWB_Testing.app */;
@@ -195,6 +201,9 @@
 			);
 			mainGroup = EF1AA24C2D69BD7900F455B5;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				EF79400C2D78AFB1008B0976 /* XCRemoteSwiftPackageReference "CocoaMQTT" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = EF1AA2562D69BD7900F455B5 /* Products */;
 			projectDirPath = "";
@@ -560,6 +569,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		EF79400C2D78AFB1008B0976 /* XCRemoteSwiftPackageReference "CocoaMQTT" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/emqx/CocoaMQTT";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.1.8;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		EF79400D2D78B001008B0976 /* CocoaMQTT */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EF79400C2D78AFB1008B0976 /* XCRemoteSwiftPackageReference "CocoaMQTT" */;
+			productName = CocoaMQTT;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = EF1AA24D2D69BD7900F455B5 /* Project object */;
 }

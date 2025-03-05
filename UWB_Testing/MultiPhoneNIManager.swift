@@ -1,10 +1,3 @@
-//
-//  MultiPhoneNIManager.swift
-//  MyMultiPhoneApp
-//
-//  Simplified implementation for basic 2-device UWB ranging
-//
-
 import Foundation
 import NearbyInteraction
 import MultipeerConnectivity
@@ -35,11 +28,15 @@ class MultiPhoneNIManager: NSObject, ObservableObject {
     /// Our local discovery token
     private var localDiscoveryToken: NIDiscoveryToken?
     
+    // publisher variable
+    private var MqttPublisher: MQTTPublisher?
+    
     // MARK: - Init
     override init() {
         super.init()
         setupMultipeerConnectivity()
         setupNISession()
+        self.MqttPublisher = MQTTPublisher(phoneManager: self)
     }
     
     deinit {
