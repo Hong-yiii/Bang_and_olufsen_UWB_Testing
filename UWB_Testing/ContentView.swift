@@ -52,11 +52,22 @@ struct ContentView: View {
                 Text("Multi-Phone Nearby Interaction")
                     .font(.title)
                     .bold()
-
+                
                 Text("Status: \(manager.statusMessage)")
                     .font(.subheadline)
                     .foregroundColor(.gray)
-
+                
+                // Add the direction visualization view
+                if let phone = manager.connectedPhone {
+                    DirectionVisualizationView(phone: phone)
+                } else {
+                    // Show empty placeholder square when no phone is connected
+                    Rectangle()
+                        .stroke(Color.gray, lineWidth: 2)
+                        .frame(width: 200, height: 200)
+                        .padding()
+                }
+                
                 if manager.connectedPhones.isEmpty {
                     Text("No connected phones detected.")
                         .font(.headline)
@@ -72,9 +83,8 @@ struct ContentView: View {
                     Text("Logs:")
                         .font(.headline)
                         .padding(.top, 10)
-
+                    
                     ScrollView {
-                        // show the grouped logs
                         LogsView()
                     }
                     .frame(height: 150)
@@ -189,5 +199,39 @@ struct ArrowShape: Shape {
         path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
         path.closeSubpath()
         return path
+    }
+}
+
+struct DirectionVisualizationView: View {
+    @ObservedObject var phone: PhoneDevice
+    
+    let viewSize: CGFloat = 200 // 200x200 pt square = 7m x 7m scale
+    
+    var body: some View {
+        ZStack {
+            // Draw square boundary
+            Rectangle()
+                .stroke(Color.gray, lineWidth: 2)
+                .frame(width: viewSize, height: viewSize)
+            
+            // Draw phone position if data is available
+            if let direction = phone.direction, let distance = phone.distance {
+                let scale = viewSize / 10.0 // 10 meters = 200 points
+                
+                let xPos = CGFloat(direction.x * distance) * scale
+                let zPos = CGFloat(direction.z * distance) * scale * -1 // Negative Z means "into the screen"
+                
+                Circle()
+                    .fill(phone.color)
+                    .frame(width: 20, height: 20)
+                    .position(x: viewSize / 10 * 3 + xPos, y: viewSize - zPos)
+                
+                Text(phone.displayName)
+                    .font(.caption)
+                    .position(x: viewSize / 10 * 3 + xPos, y: viewSize - zPos + 15)
+            }
+        }
+        .frame(width: viewSize, height: viewSize)
+        .padding()
     }
 }
