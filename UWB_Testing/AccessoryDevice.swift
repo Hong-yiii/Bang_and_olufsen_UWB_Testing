@@ -129,10 +129,12 @@ extension AccessoryDevice: NISessionDelegate {
     func session(_ session: NISession, didGenerateShareableConfigurationData configData: Data, for object: NINearbyObject) {
         Logger.log("Shareable config data generated for \(accessoryName)", from: "AccessoryDevice")
         // Send it back to the accessory (via MQTT or your data channel)
+        /// TODO: Need to rewrite this to use bluetooth to send back the data
         mqttPublisher?.publishConfigData(configData)
     }
     
     /// Called when the accessory is out of range or times out
+    /// TODO: handle disconnects, what is the logic when it disconnects, how about the config
     func session(_ session: NISession, didRemove nearbyObjects: [NINearbyObject], reason: NINearbyObject.RemovalReason) {
         Logger.log("Accessory \(accessoryName) removed, reason: \(reason)", from: "AccessoryDevice")
         // You could choose to re-init or stop, depending on your needs
