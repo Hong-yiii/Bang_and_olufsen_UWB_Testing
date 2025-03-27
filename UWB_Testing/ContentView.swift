@@ -1,36 +1,36 @@
 import SwiftUI
 import simd
 
-/// Main entry point of the application
 @main
-struct MyMultiPhoneApp: App {
-    @StateObject private var multiPhoneManager = MultiPhoneNIManager()
-    
+struct UWBTestingApp: App {
+    @StateObject private var accessoryManager = AccessoryNIManager()
+
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .environmentObject(multiPhoneManager)
+                .environmentObject(accessoryManager)
                 .onAppear {
                     PermissionsManager.shared.requestPermissions { granted in
-                        Logger.log("Permissions granted callback: \(granted)", from: "ContentView")
+                        Logger.log("Permissions granted callback: \(granted)", from: "App Entry")
                     }
                 }
         }
     }
 }
 
-/// Main view that manages the UI for tracking nearby phones
+
+/// Main view that manages the UI for tracking nearby accessories
 struct ContentView: View {
-    @EnvironmentObject var manager: MultiPhoneNIManager
+    @EnvironmentObject var manager: AccessoryNIManager
     @State private var showAlert = false
-    
+
     var body: some View {
         TabView {
             mainTrackerView
                 .tabItem {
                     Label("Tracker", systemImage: "location.circle.fill")
                 }
-            
+
             DebugPermissionsView()
                 .tabItem {
                     Label("Permissions", systemImage: "gear")
@@ -45,36 +45,27 @@ struct ContentView: View {
                   dismissButton: .default(Text("OK")))
         }
     }
-    
+
     var mainTrackerView: some View {
         NavigationView {
             VStack(spacing: 20) {
-                Text("Multi-Phone Nearby Interaction")
+                Text("Accessory Tracker")
                     .font(.title)
                     .bold()
-                
-                Text("Status: \(manager.statusMessage)")
+
+                Text("Total Accessories: \(manager.accessories.count)")
                     .font(.subheadline)
                     .foregroundColor(.gray)
-                
-                // Add the direction visualization view
-                if let phone = manager.connectedPhone {
-                    DirectionVisualizationView(phone: phone)
-                } else {
-                    // Show empty placeholder square when no phone is connected
-                    Rectangle()
-                        .stroke(Color.gray, lineWidth: 2)
-                        .frame(width: 200, height: 200)
-                        .padding()
-                }
-                
-                if manager.connectedPhones.isEmpty {
-                    Text("No connected phones detected.")
+
+                if manager.accessories.isEmpty {
+                    Text("No accessories detected.")
                         .font(.headline)
                         .foregroundColor(.red)
                 } else {
-                    List(manager.connectedPhones) { phone in
-                        PhoneRow(phone: phone)
+                    List {
+                        ForEach(Array(manager.accessories.values), id: \ .id) { accessory in
+                            AccessoryRow(accessory: accessory)
+                        }
                     }
                     .listStyle(.grouped)
                 }
@@ -83,7 +74,7 @@ struct ContentView: View {
                     Text("Logs:")
                         .font(.headline)
                         .padding(.top, 10)
-                    
+
                     ScrollView {
                         LogsView()
                     }
@@ -96,63 +87,9 @@ struct ContentView: View {
         }
     }
 
-
-    
-    struct PhoneRow: View {
-        @ObservedObject var phone: PhoneDevice  // <-- ObservedObject ( to ensure refreshing )
-
-        var body: some View {
-            VStack(alignment: .leading, spacing: 5) {
-                Text(phone.displayName)
-                    .font(.headline)
-                    .foregroundColor(phone.color)
-                
-                if let distance = phone.distance {
-                    Text("Distance: \(String(format: "%.2f", distance)) m")
-                } else {
-                    Text("Distance: Unknown")
-                }
-                
-                if let direction = phone.direction {
-                    DirectionIndicator(direction: direction)
-                } else {
-                    Text("Direction: Unknown")
-                }
-            }
-            .padding()
-            .background(RoundedRectangle(cornerRadius: 10)
-                            .fill(Color.white)
-                            .shadow(radius: 2))
-        }
-    }
-
-
     func checkPermissions() {
         if !PermissionsManager.shared.isNearbyInteractionSupported {
             showAlert = true
-        }
-    }
-}
-
-/// A graphical representation of the phone's direction relative to the user
-struct DirectionIndicator: View {
-    let direction: simd_float3
-    
-    var body: some View {
-        VStack {
-            Text("Direction")
-                .font(.caption)
-            
-            ZStack {
-                Circle()
-                    .stroke(Color.gray, lineWidth: 2)
-                    .frame(width: 50, height: 50)
-                
-                ArrowShape()
-                    .rotationEffect(Angle(radians: atan2(Double(direction.y), Double(direction.x))))
-                    .frame(width: 20, height: 20)
-                    .foregroundColor(.blue)
-            }
         }
     }
 }
@@ -162,20 +99,17 @@ struct LogsView: View {
     @ObservedObject var logStore = Logger.sharedStore
 
     var body: some View {
-        // Group logs by their 'origin' property.
         let grouped = Dictionary(grouping: logStore.logs, by: { $0.origin })
 
         VStack(alignment: .leading) {
-            ForEach(grouped.keys.sorted(), id: \.self) { origin in
-                // Section Header: e.g. "ContentView logs:", "MultiPhoneNIManager logs:"
+            ForEach(grouped.keys.sorted(), id: \ .self) { origin in
                 Text("\(origin) logs:")
                     .font(.headline)
                     .padding(.top, 5)
 
-                // Display only the last 5 logs for each origin category
                 let logs = grouped[origin]?.suffix(5) ?? []
 
-                ForEach(logs, id: \.id) { logEntry in
+                ForEach(logs, id: \ .id) { logEntry in
                     Text(logEntry.message)
                         .font(.caption)
                         .padding(5)
@@ -188,9 +122,30 @@ struct LogsView: View {
     }
 }
 
+/// A graphical representation of the accessory's direction relative to the user
+struct DirectionIndicator: View {
+    let direction: simd_float3
 
+    var body: some View {
+        VStack {
+            Text("Direction")
+                .font(.caption)
 
-/// A simple triangle shape representing an arrow
+            ZStack {
+                Circle()
+                    .stroke(Color.gray, lineWidth: 2)
+                    .frame(width: 50, height: 50)
+
+                ArrowShape()
+                    .rotationEffect(Angle(radians: atan2(Double(direction.y), Double(direction.x))))
+                    .frame(width: 20, height: 20)
+                    .foregroundColor(.blue)
+            }
+        }
+    }
+}
+
+/// Simple triangle shape for direction arrow
 struct ArrowShape: Shape {
     func path(in rect: CGRect) -> Path {
         var path = Path()
@@ -202,36 +157,35 @@ struct ArrowShape: Shape {
     }
 }
 
-struct DirectionVisualizationView: View {
-    @ObservedObject var phone: PhoneDevice
-    
-    let viewSize: CGFloat = 200 // 200x200 pt square = 7m x 7m scale
-    
+/// Displays a single accessory device's info
+struct AccessoryRow: View {
+    @ObservedObject var accessory: AccessoryDevice
+
     var body: some View {
-        ZStack {
-            // Draw square boundary
-            Rectangle()
-                .stroke(Color.gray, lineWidth: 2)
-                .frame(width: viewSize, height: viewSize)
-            
-            // Draw phone position if data is available
-            if let direction = phone.direction, let distance = phone.distance {
-                let scale = viewSize / 10.0 // 10 meters = 200 points
-                
-                let xPos = CGFloat(direction.x * distance) * scale
-                let zPos = CGFloat(direction.z * distance) * scale * -1 // Negative Z means "into the screen"
-                
-                Circle()
-                    .fill(phone.color)
-                    .frame(width: 20, height: 20)
-                    .position(x: viewSize / 10 * 3 + xPos, y: viewSize - zPos)
-                
-                Text(phone.displayName)
-                    .font(.caption)
-                    .position(x: viewSize / 10 * 3 + xPos, y: viewSize - zPos + 15)
+        VStack(alignment: .leading, spacing: 5) {
+            Text(accessory.accessoryName)
+                .font(.headline)
+
+            if let distance = accessory.distance {
+                Text("Distance: \(String(format: "%.2f", distance)) m")
+            } else {
+                Text("Distance: Unknown")
+            }
+
+            if let direction = accessory.direction {
+                DirectionIndicator(direction: direction)
+            } else {
+                Text("Direction: Unknown")
             }
         }
-        .frame(width: viewSize, height: viewSize)
         .padding()
+        .background(RoundedRectangle(cornerRadius: 10)
+                        .fill(Color.white)
+                        .shadow(radius: 2))
     }
+}
+
+// Preview for development
+#Preview {
+    ContentView().environmentObject(AccessoryNIManager())
 }
