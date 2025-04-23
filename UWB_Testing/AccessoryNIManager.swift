@@ -1,26 +1,17 @@
 import Foundation
 import CoreBluetooth
-import SwiftUI
-
-/// A manager that coordinates multiple AccessoryDevice objects.
-/// Receives new config data for an accessory and creates/updates the appropriate AccessoryDevice.
-/// Also handles signals to stop or remove an accessory from the system.
-// AccessoryNIManager.swift
-//  1️⃣ iPhone sends:        0x0A
-//  2️⃣ Accessory replies:   0x01 + UserAccessoryConfigData_t
-//  3️⃣ iPhone sends:        0x0B + shareable_config_data
-//  4️⃣ Accessory replies:   0x02 (session ready)
-//  5️⃣ iPhone starts:       NISession.run(configData)
-
-
-import Foundation
-import CoreBluetooth
 import NearbyInteraction
 import SwiftUI
 
-/// A manager that coordinates multiple AccessoryDevice objects and handles the BLE handshake flow.
-class AccessoryNIManager: NSObject, ObservableObject, BLEManagerDelegate {
+/**
+ Orchestrates **many** `AccessoryDevice` instances – keyed by each
+ peripheral’s UUID so identical accessory names no longer collide.
+ */
+class AccessoryNIManager: NSObject,
+                           ObservableObject,
+                           BLEManagerDelegate {
 
+    /// All active accessories, indexed by the peripheral UUID string
     @Published var accessories: [String: AccessoryDevice] = [:]
 
     override init() {
@@ -28,27 +19,40 @@ class AccessoryNIManager: NSObject, ObservableObject, BLEManagerDelegate {
         BLEManager.shared.delegate = self
     }
 
-    // MARK: - BLEManagerDelegate Handlers
+    // MARK: - BLEManagerDelegate
 
-    func bleManager(_ manager: BLEManager, didReceiveInitResponseFrom device: CBPeripheral, data: Data) {
-        let name = device.name ?? "Unknown"
-        Logger.log("🧠 Received accessory config for \(name)", from: "AccessoryNIManager")
+    func bleManager(_ manager: BLEManager,
+                    didReceiveInitResponseFrom device: CBPeripheral,
+                    data: Data) {
 
-        // Create or update the accessory object
-        let accessory = accessories[name] ?? AccessoryDevice(accessoryName: name)
-        accessories[name] = accessory
+        let uuidKey   = device.identifier.uuidString
+        let baseName  = device.name ?? "Unknown"
+        let unique    = "\(baseName)-\(uuidKey.prefix(4))"
 
-        // Step 5️⃣: Directly run the NI session using the received config
+        // Create (or fetch) an AccessoryDevice for this specific peripheral
+        let accessory = accessories[uuidKey] ??
+                        AccessoryDevice(accessoryName: unique)
+
+        accessory.peripheral = device          // give it the reference
+        accessories[uuidKey] = accessory       // store for UI binding
+
+        Logger.log("🧠 Received accessory config for \(unique)",
+                   from: "AccessoryNIManager")
+
         do {
             try accessory.configureAndRunSession(configData: data)
         } catch {
-            Logger.log("❌ Failed to configure accessory \(name): \(error)", from: "AccessoryNIManager")
+            Logger.log("❌ Failed to configure \(unique): \(error)",
+                       from: "AccessoryNIManager")
         }
     }
 
-    func bleManager(_ manager: BLEManager, didReceiveStartResponseFrom device: CBPeripheral, config: Data) {
-        let name = device.name ?? "Unknown"
-        Logger.log("🚀 Received start signal from accessory \(name)", from: "AccessoryNIManager")
-        // You may choose to log or use this callback for additional logic.
+    func bleManager(_ manager: BLEManager,
+                    didReceiveStartResponseFrom device: CBPeripheral,
+                    config: Data) {
+        let shortId = device.identifier.uuidString.prefix(4)
+        Logger.log("🚀 Start signal from accessory \(device.name ?? "Unknown")-\(shortId)",
+                   from: "AccessoryNIManager")
+        // Extra logic could live here if needed.
     }
 }
