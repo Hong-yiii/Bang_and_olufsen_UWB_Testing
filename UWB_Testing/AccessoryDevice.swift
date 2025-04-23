@@ -25,7 +25,7 @@ class AccessoryDevice: NSObject, ObservableObject {
     @Published var distance: Float?
     @Published var direction: simd_float3?
 
-    private var mqttPublisher: MQTTPublisher?
+    // private var mqttPublisher: MQTTPublisher?
 
     init(accessoryName: String,
          firmwareVersion: String? = nil,
@@ -34,20 +34,8 @@ class AccessoryDevice: NSObject, ObservableObject {
         self.firmwareVersion = firmwareVersion
         self.modelInfo = modelInfo
         super.init()
-        self.mqttPublisher = MQTTPublisher(forDevice: self)
+        // self.mqttPublisher = MQTTPublisher(forDevice: self)
         Logger.log("AccessoryDevice init: \(accessoryName)", from: "AccessoryDevice")
-    }
-
-    // MARK: - Trigger NI Config Generation
-    func beginShareableConfigurationGeneration(delegate: NISessionDelegate) {
-        if niSession == nil {
-            niSession = NISession()
-        }
-        niSession?.invalidate()
-        let session = NISession()
-        session.delegate = delegate
-        niSession = session
-        Logger.log("Prepared NI session for config generation for \(accessoryName)", from: "AccessoryDevice")
     }
 
     // MARK: - Configure & Run Session
@@ -55,13 +43,22 @@ class AccessoryDevice: NSObject, ObservableObject {
         let config = try NINearbyAccessoryConfiguration(data: configData)
         accessoryConfiguration = config
 
+        if niSession == nil {
+            niSession = NISession()
+        }
+
         guard let session = niSession else {
-            throw NSError(domain: "AccessoryDevice", code: 1, userInfo: [NSLocalizedDescriptionKey: "NISession was not initialized prior to running config"])
+            throw NSError(
+                domain: "AccessoryDevice",
+                code: 1,
+                userInfo: [NSLocalizedDescriptionKey: "NISession was not initialized prior to running config"]
+            )
         }
 
         session.delegate = self
         session.run(config)
         sessionActive = true
+
         Logger.log("NISession started for \(accessoryName).", from: "AccessoryDevice")
     }
 
@@ -76,10 +73,12 @@ class AccessoryDevice: NSObject, ObservableObject {
 
     func publishUpdatesIfNeeded() {
         if let dist = distance {
-            mqttPublisher?.publishDistance(dist)
+            Logger.log("📏 Distance updated: \(dist)m", from: "AccessoryDevice")
+            // mqttPublisher?.publishDistance(dist)
         }
         if let dir = direction {
-            mqttPublisher?.publishDirection(dir)
+            Logger.log("🧭 Direction updated: \(dir.x), \(dir.y), \(dir.z)", from: "AccessoryDevice")
+            // mqttPublisher?.publishDirection(dir)
         }
     }
 }

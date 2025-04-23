@@ -58,13 +58,23 @@ class BLEManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
             case rxUUID:
                 rxCharacteristic = char
                 Logger.log("✅ RX characteristic ready", from: "BLEManager")
-                sendInitCommand()
             case txUUID:
                 txCharacteristic = char
                 peripheral.setNotifyValue(true, for: char)
                 Logger.log("✅ Subscribed to TX notifications", from: "BLEManager")
             default:
                 break
+            }
+        }
+    }
+
+    func peripheral(_ peripheral: CBPeripheral, didUpdateNotificationStateFor characteristic: CBCharacteristic, error: Error?) {
+        if characteristic.uuid == txUUID {
+            if characteristic.isNotifying {
+                Logger.log("📡 TX Notifications fully enabled. Sending Init.", from: "BLEManager")
+                sendInitCommand()
+            } else {
+                Logger.log("❌ TX Notifications not enabled", from: "BLEManager")
             }
         }
     }
