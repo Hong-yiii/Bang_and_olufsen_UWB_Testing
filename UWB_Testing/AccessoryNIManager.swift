@@ -1,51 +1,86 @@
 import Foundation
+import CoreBluetooth
 import SwiftUI
 
 /// A manager that coordinates multiple AccessoryDevice objects.
 /// Receives new config data for an accessory and creates/updates the appropriate AccessoryDevice.
 /// Also handles signals to stop or remove an accessory from the system.
-class AccessoryNIManager: ObservableObject {
-    
-    // Keep track of multiple AccessoryDevice objects, e.g. keyed by name:
+// AccessoryNIManager.swift
+//    [ App launches ]
+//    ↓
+//    BLEManager connects + discovers
+//    ↓
+//    AccessoryNIManager → sends 0x0A (init)
+//    ↓
+//    BLEManager gets 0x01 → passes back to AccessoryNIManager
+//    ↓
+//    AccessoryNIManager → calls session.generateShareableConfig(...)
+//    ↓
+//    BLEManager sends 0x0B + configData
+//    ↓
+//    BLEManager gets 0x02 → passes to AccessoryNIManager
+//    ↓
+//    AccessoryNIManager → calls session.run(config)
+//    ↓
+//    UWB Ranging begins
+
+
+import Foundation
+import CoreBluetooth
+import NearbyInteraction
+
+/// A manager that coordinates multiple AccessoryDevice objects and handles the BLE handshake flow.
+class AccessoryNIManager: NSObject, ObservableObject, BLEManagerDelegate {
+
     @Published var accessories: [String: AccessoryDevice] = [:]
-    
-    // MARK: - Handling Config Data
-    /// Called whenever your system receives "Accessory Configuration Data" for a specific device
-    /// (e.g., from MQTT or a data channel).
-    func handleAccessoryConfigData(_ configData: Data, accessoryName: String) {
+    private var pendingConfigRequest: [String: CBPeripheral] = [:]
+
+    override init() {
+        super.init()
+        BLEManager.shared.delegate = self
+    }
+
+    // MARK: - BLEManagerDelegate Handlers
+
+    func bleManager(_ manager: BLEManager, didReceiveInitResponseFrom device: CBPeripheral, data: Data) {
+        let name = device.name ?? "Unknown"
+        Logger.log("🧠 Received accessory config for \(name)", from: "AccessoryNIManager")
+
+        // Create placeholder device if needed
+        let accessory = accessories[name] ?? AccessoryDevice(accessoryName: name)
+        accessories[name] = accessory
+
+        // Save peripheral for later use
+        pendingConfigRequest[name] = device
+
+        // Ask the device to begin NI config generation
+        accessory.beginShareableConfigurationGeneration(delegate: self)
+    }
+
+    func bleManager(_ manager: BLEManager, didReceiveStartResponseFrom device: CBPeripheral, config: Data) {
+        let name = device.name ?? "Unknown"
+        Logger.log("🚀 Ready to start NI for \(name)", from: "AccessoryNIManager")
+
         do {
-            // If we already have this device, reuse it; otherwise, create a new one
-            let device: AccessoryDevice
-            if let existing = accessories[accessoryName] {
-                device = existing
-                Logger.log("Updating existing device \(accessoryName).", from: "AccessoryNIManager")
-            } else {
-                device = AccessoryDevice(accessoryName: accessoryName)
-                accessories[accessoryName] = device
-                Logger.log("Created new device \(accessoryName).", from: "AccessoryNIManager")
-            }
-            
-            // Instruct the device to parse the config and run its new NISession
-            try device.configureAndRunSession(configData: configData)
-            
+            let accessory = accessories[name] ?? AccessoryDevice(accessoryName: name)
+            accessories[name] = accessory
+            try accessory.configureAndRunSession(configData: config)
         } catch {
-            Logger.log("Error configuring accessory \(accessoryName): \(error)", from: "AccessoryNIManager")
+            Logger.log("❌ Failed to configure accessory \(name): \(error)", from: "AccessoryNIManager")
         }
     }
-    
-    // MARK: - Handling Stop/Removal
-    /// Called if the accessory is out of range or we receive a "stop" message from it
-    func stopAccessorySession(accessoryName: String) {
-        guard let device = accessories[accessoryName] else { return }
-        device.stopSession()
-        Logger.log("\(accessoryName) session stopped.", from: "AccessoryNIManager")
+}
+
+// MARK: - NI Session Delegate Extension
+
+extension AccessoryNIManager: NISessionDelegate {
+    func session(_ session: NISession, didGenerateShareableConfigurationData configData: Data, for object: NINearbyObject) {
+        guard let deviceName = accessories.first(where: { $0.value.niSession === session })?.key else { return }
+        Logger.log("📤 Generated NI config for \(deviceName)", from: "AccessoryNIManager")
+        BLEManager.shared.sendNIConfig(configData)
     }
-    
-    /// Optionally remove the device entirely from the dictionary
-    func removeAccessory(accessoryName: String) {
-        guard let device = accessories[accessoryName] else { return }
-        device.stopSession()
-        accessories.removeValue(forKey: accessoryName)
-        Logger.log("Removed accessory \(accessoryName) from manager.", from: "AccessoryNIManager")
+
+    func session(_ session: NISession, didInvalidateWith error: Error) {
+        Logger.log("⚠️ Session invalidated: \(error.localizedDescription)", from: "AccessoryNIManager")
     }
 }

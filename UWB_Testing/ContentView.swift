@@ -10,6 +10,10 @@ struct UWBTestingApp: App {
             ContentView()
                 .environmentObject(accessoryManager)
                 .onAppear {
+                    // ✅ Set BLE delegate once when the app starts
+                    BLEManager.shared.delegate = accessoryManager
+                    
+                    // ✅ Request all necessary permissions
                     PermissionsManager.shared.requestPermissions { granted in
                         Logger.log("Permissions granted callback: \(granted)", from: "App Entry")
                     }
